@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Combinatorics Visualiser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#050810;--s1:#0a0f1e;--s2:#0f1628;--s3:#141c35;
+  --cyan:#00d4ff;--gold:#ffd700;--green:#00ffa3;
+  --red:#ff6b6b;--violet:#7c3aed;--text:#e0e8ff;
+  --dim:#6a7a9a;--bdr:#1e2d50;
+}
+.light{--bg:#f0f4ff;--s1:#e0e8ff;--s2:#d4deff;--s3:#c8d4f8;--cyan:#1060c8;--gold:#7c3000;--green:#007a55;--red:#c0001a;--text:#1a2050;--dim:#5060a0;--bdr:#9ab0e0;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;min-height:100vh;padding:24px 16px 60px;
+  background-image:radial-gradient(ellipse at 10% 10%,rgba(0,212,255,.04) 0%,transparent 60%),radial-gradient(ellipse at 90% 90%,rgba(124,58,237,.04) 0%,transparent 60%);
+  transition:background .3s,color .3s;}
+.page{max-width:1060px;margin:0 auto;}
+h1{font-family:'Orbitron',sans-serif;font-size:clamp(1.2rem,3vw,1.9rem);color:var(--cyan);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;}
+.subtitle{color:var(--dim);font-size:.82rem;margin-bottom:14px;}
+.accent-line{height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);margin-bottom:16px;}
+.ctrl-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;margin-bottom:14px;}
+.input-row{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;margin-bottom:12px;}
+.field-group{display:flex;flex-direction:column;gap:4px;}
+.field-group label{font-family:'Orbitron',sans-serif;font-size:.65rem;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;}
+.field-group input[type=number]{background:var(--s2);border:1px solid var(--bdr);border-radius:6px;color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:1rem;padding:6px 10px;width:80px;outline:none;transition:border-color .2s;}
+.field-group input[type=number]:focus{border-color:var(--cyan);}
+.btn-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+button{font-family:'Orbitron',sans-serif;font-size:.68rem;letter-spacing:.06em;border-radius:6px;border:1px solid var(--bdr);background:var(--s2);color:var(--text);padding:7px 14px;cursor:pointer;transition:border-color .2s,box-shadow .2s;}
+button:hover{border-color:var(--cyan);box-shadow:0 0 8px rgba(0,212,255,.25);}
+button.pri{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 10px rgba(0,212,255,.2);}
+button.pri:hover{box-shadow:0 0 18px rgba(0,212,255,.45);}
+button.danger{border-color:var(--red);color:var(--red);}
+.slider-group{display:flex;align-items:center;gap:8px;margin-left:8px;}
+.slider-group label{font-family:'Orbitron',sans-serif;font-size:.63rem;color:var(--dim);letter-spacing:.07em;white-space:nowrap;}
+.slider-group input[type=range]{accent-color:var(--cyan);width:90px;cursor:pointer;}
+.slider-val{color:var(--cyan);font-size:.78rem;min-width:36px;}
+.explain-box{background:var(--s2);border-left:3px solid var(--cyan);border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:12px;min-height:70px;}
+.explain-phase{font-family:'Orbitron',sans-serif;font-size:.65rem;color:var(--cyan);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+.explain-body{font-size:.82rem;line-height:1.55;color:var(--text);}
+.explain-body b{color:var(--gold);font-weight:700;}
+.explain-body em{color:var(--green);font-style:normal;}
+.canvas-wrap{position:relative;margin-bottom:8px;border-radius:10px;overflow:hidden;border:1px solid var(--bdr);background:var(--s1);cursor:grab;}
+.canvas-wrap:active{cursor:grabbing;}
+canvas{display:block;width:100%;}
+.progress-bar{height:3px;background:var(--s3);border-radius:2px;margin-bottom:6px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:2px;transition:width .1s linear;width:0%;}
+.status-line{color:var(--dim);font-size:.72rem;margin-bottom:14px;min-height:18px;}
+.info-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px;}
+.info-card{background:var(--s1);border:1px solid var(--bdr);border-radius:8px;padding:10px 14px;}
+.info-card .ic-label{font-family:'Orbitron',sans-serif;font-size:.58rem;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
+.info-card .ic-val{font-size:1.05rem;color:var(--gold);font-weight:700;}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────── */
+.tab-bar{display:flex;gap:0;margin-bottom:0;border-bottom:1px solid var(--bdr);}
+.tab-btn{font-family:'Orbitron',sans-serif;font-size:.68rem;letter-spacing:.07em;
+  border:1px solid var(--bdr);border-bottom:none;border-radius:8px 8px 0 0;
+  background:var(--s2);color:var(--dim);padding:9px 20px;cursor:pointer;
+  transition:background .2s,color .2s,border-color .2s;margin-right:4px;}
+.tab-btn:hover{color:var(--cyan);}
+.tab-btn.active{background:var(--s1);color:var(--cyan);border-color:var(--cyan);}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+/* colour-coded balls in restricted tab */
+.col1-badge{display:inline-block;width:10px;height:10px;border-radius:50%;background:#e63946;vertical-align:middle;margin-right:4px;}
+.col2-badge{display:inline-block;width:10px;height:10px;border-radius:50%;background:#457b9d;vertical-align:middle;margin-right:4px;}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Combinatorics Visualiser</h1>
+  <p class="subtitle">Interactive animated proofs</p>
+  <div class="accent-line"></div>
+
+  <!-- Shared controls (speed / text / light always visible) -->
+  <div class="ctrl-card" style="margin-bottom:0;border-radius:10px 10px 0 0;">
+    <div class="btn-row">
+      <button class="pri" id="btnRun">▶ Run</button>
+      <button id="btnPause">⏸ Pause</button>
+      <button id="btnBack">◀ Back</button>
+      <button id="btnFwd">Fwd ▶</button>
+      <button class="danger" id="btnReset">↺ Reset</button>
+      <button id="btnRand">🎲 Rand</button>
+      <button id="btnLight">☀ Light</button>
+      <div class="slider-group"><label>Speed</label><input type="range" id="sldSpeed" min="0.3" max="3" step="0.1" value="1"><span class="slider-val" id="lblSpeed">1.0×</span></div>
+      <div class="slider-group"><label>Text</label><input type="range" id="sldText" min="8" max="22" step="1" value="12"><span class="slider-val" id="lblText">12px</span></div>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab0btn" onclick="switchTab(0)">C(n,m) — Combinations</button>
+    <button class="tab-btn" id="tab1btn" onclick="switchTab(1)">Restricted Choice</button>
+  </div>
+
+  <!-- Tab 0: original C(n,m) -->
+  <div class="tab-panel active" id="tab0">
+    <div class="ctrl-card" style="border-radius:0 0 10px 10px;margin-bottom:14px;">
+      <div class="input-row">
+        <div class="field-group"><label>n — Total balls</label><input type="number" id="inN" value="6" min="2" max="10"></div>
+        <div class="field-group"><label>m — Choose</label><input type="number" id="inM" value="3" min="1" max="10"></div>
+      </div>
+    </div>
+    <div class="explain-box">
+      <div class="explain-phase" id="explainPhase">Ready</div>
+      <div class="explain-body" id="explainBody">Press <b>▶ Run</b> to start, or <b>Fwd ▶</b> to step through like a slideshow.</div>
+    </div>
+    <div class="canvas-wrap"><canvas id="cvs"></canvas></div>
+    <div class="progress-bar"><div class="progress-fill" id="pbar"></div></div>
+    <div class="status-line" id="statusLine">Idle</div>
+    <div class="info-strip">
+      <div class="info-card"><div class="ic-label">n (total)</div><div class="ic-val" id="icN">6</div></div>
+      <div class="info-card"><div class="ic-label">m (choose)</div><div class="ic-val" id="icM">3</div></div>
+      <div class="info-card"><div class="ic-label">Ordered (nPm)</div><div class="ic-val" id="icPerm">—</div></div>
+      <div class="info-card"><div class="ic-label">Permutations / set (m!)</div><div class="ic-val" id="icMfact">—</div></div>
+      <div class="info-card"><div class="ic-label">C(n,m)</div><div class="ic-val" id="icComb">—</div></div>
+    </div>
+  </div>
+
+  <!-- Tab 1: restricted choice -->
+  <div class="tab-panel" id="tab1">
+    <div class="ctrl-card" style="border-radius:0 0 10px 10px;margin-bottom:14px;">
+      <div class="input-row">
+        <div class="field-group"><label>n — Total balls</label><input type="number" id="rN" value="8" min="2" max="14"></div>
+        <div class="field-group"><label>n₁ — Colour 1 balls</label><input type="number" id="rN1" value="4" min="1" max="13"></div>
+        <div class="field-group"><label>m — Choose total</label><input type="number" id="rM" value="4" min="1" max="14"></div>
+        <div class="field-group"><label>m₁ — Min colour 1</label><input type="number" id="rM1" value="2" min="0" max="14"></div>
+      </div>
+    </div>
+    <div class="explain-box">
+      <div class="explain-phase" id="rExplainPhase">Ready</div>
+      <div class="explain-body" id="rExplainBody">Press <b>▶ Run</b> to start, or <b>Fwd ▶</b> to step through like a slideshow.</div>
+    </div>
+    <div class="canvas-wrap"><canvas id="cvs2"></canvas></div>
+    <div class="progress-bar"><div class="progress-fill" id="pbar2"></div></div>
+    <div class="status-line" id="statusLine2">Idle</div>
+    <div class="info-strip">
+      <div class="info-card"><div class="ic-label">n₁ (colour 1)</div><div class="ic-val" id="ricN1">4</div></div>
+      <div class="info-card"><div class="ic-label">n₂ (colour 2)</div><div class="ic-val" id="ricN2">4</div></div>
+      <div class="info-card"><div class="ic-label">m (choose)</div><div class="ic-val" id="ricM">4</div></div>
+      <div class="info-card"><div class="ic-label">m₁ (min col 1)</div><div class="ic-val" id="ricM1">2</div></div>
+      <div class="info-card"><div class="ic-label">m′ = min(m,n₁)</div><div class="ic-val" id="ricMp">—</div></div>
+      <div class="info-card"><div class="ic-label">Answer</div><div class="ic-val" id="ricAns">—</div></div>
+    </div>
+  </div>
+</div>
+
+<script src="binomial_visualiser.obf.js"></script>
+</body>
+</html>

@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vector Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050810;
+  --s1: #0a0f1e;
+  --s2: #0f1628;
+  --s3: #141c35;
+  --cyan: #00d4ff;
+  --gold: #ffd700;
+  --green: #00ffa3;
+  --red: #ff6b6b;
+  --violet: #7c3aed;
+  --text: #e0e8ff;
+  --dim: #6a7a9a;
+  --bdr: #1e2d50;
+  --font-ui: 14px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: var(--font-ui); scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 0% 0%, rgba(0,212,255,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 100% 100%, rgba(124,58,237,0.04) 0%, transparent 70%);
+}
+body.light {
+  --bg: #f0f4ff;
+  --s1: #e4eaf8;
+  --s2: #d8e0f5;
+  --s3: #ccd5f0;
+  --text: #1a2040;
+  --dim: #5a6a9a;
+  --bdr: #b0c0e0;
+  /* accent overrides — all chosen for ≥4.5:1 contrast on light bg */
+  --cyan: #0077aa;
+  --gold: #8a6000;
+  --green: #1a7a4a;
+  --red: #c0292a;
+  --violet: #5b1fa8;
+}
+
+/* LAYOUT */
+.page-wrap {
+  position: relative; z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 16px;
+}
+.title-block h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 900;
+  color: var(--cyan);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+.title-block .subtitle {
+  color: var(--dim);
+  font-size: 0.78rem;
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+.header-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.accent-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  margin-bottom: 16px;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--bdr);
+  margin-bottom: 16px;
+}
+.tab-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 22px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+/* BUTTONS */
+btn, .btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--bdr);
+  background: var(--s2);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.btn.pri { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 8px color-mix(in srgb, var(--cyan) 30%, transparent); }
+.btn.pri:hover { background: color-mix(in srgb, var(--cyan) 10%, transparent); box-shadow: 0 0 14px color-mix(in srgb, var(--cyan) 45%, transparent); }
+.btn.danger { border-color: var(--red); color: var(--red); }
+.btn.active-op { border-color: var(--gold); color: var(--gold); background: color-mix(in srgb, var(--gold) 10%, transparent); }
+.btn.sm { padding: 5px 10px; font-size: 0.6rem; }
+.btn-icon { padding: 7px 10px; }
+
+/* SLIDERS */
+.slider-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.7rem; color: var(--dim);
+}
+.slider-row label { font-family: 'Orbitron', sans-serif; font-size: 0.62rem; letter-spacing: 0.05em; white-space: nowrap; }
+.slider-row .val { color: var(--cyan); min-width: 36px; font-size: 0.72rem; }
+input[type=range] {
+  -webkit-appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--s3);
+  outline: none;
+  cursor: pointer;
+  width: 80px;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 4px rgba(0,212,255,0.5);
+}
+
+/* NUMBER INPUTS */
+input[type=number], input[type=text] {
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  padding: 4px 8px;
+  width: 70px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input[type=number]:focus, input[type=text]:focus { border-color: var(--cyan); }
+
+/* VECTORS TAB LAYOUT */
+.vec-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 12px;
+}
+@media (max-width: 700px) { .vec-layout { grid-template-columns: 1fr; } }
+
+/* VECTOR LIST */
+.vec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vec-item {
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  position: relative;
+}
+.vec-item:hover { border-color: var(--dim); }
+.vec-item.selected { border-color: var(--cyan); box-shadow: 0 0 8px color-mix(in srgb, var(--cyan) 20%, transparent); }
+.vec-item-header {
+  display: flex; align-items: center; gap: 7px; margin-bottom: 4px;
+}
+.vec-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.vec-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.05em;
+}
+.vec-coords {
+  font-size: 0.67rem;
+  color: var(--dim);
+  line-height: 1.4;
+}
+.vec-coords span { color: var(--gold); }
+/* Edit button on coord rows */
+.coord-edit-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--dim); font-size: 0.6rem; padding: 0 0 0 4px;
+  opacity: 0; transition: opacity 0.15s, color 0.15s;
+  line-height: 1; vertical-align: middle;
+}
+.vec-item:hover .coord-edit-btn { opacity: 1; }
+.coord-edit-btn:hover { color: var(--cyan); }
+/* Edit-mode row */
+.coord-edit-row {
+  display: flex; align-items: center; gap: 3px;
+  flex-wrap: wrap; margin-top: 1px;
+}
+.coord-edit-row label { font-size: 0.6rem; color: var(--dim); }
+.coord-edit-inp {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text);
+  background: var(--s3);
+  border: 1px solid var(--bdr);
+  border-radius: 3px;
+  width: 52px; padding: 1px 4px;
+  outline: none;
+}
+.coord-edit-inp:focus { border-color: var(--cyan); }
+.coord-edit-ok {
+  font-family: 'Orbitron', sans-serif; font-size: 0.55rem;
+  background: none; border: 1px solid var(--cyan); border-radius: 3px;
+  color: var(--cyan); cursor: pointer; padding: 1px 5px;
+}
+.coord-edit-ok:hover { background: color-mix(in srgb, var(--cyan) 12%, transparent); }
+.vec-del {
+  position: absolute; top: 5px; right: 6px;
+  background: none; border: none;
+  color: var(--dim); cursor: pointer; font-size: 0.75rem;
+  transition: color 0.15s; line-height: 1;
+}
+.vec-del:hover { color: var(--red); }
+.add-vec-btn {
+  border: 1px dashed var(--bdr);
+  border-radius: 8px;
+  background: none;
+  color: var(--dim);
+  padding: 8px;
+  cursor: pointer;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  width: 100%;
+  transition: all 0.15s;
+}
+.add-vec-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* CANVAS AREA */
+.canvas-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.canvas-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.op-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  color: var(--dim);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-right: 2px;
+}
+#mainCanvas {
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  cursor: default;
+  display: block;
+  width: 100%;
+  background: var(--s1);
+  touch-action: none;
+}
+#mainCanvas.grabbing { cursor: grabbing; }
+#mainCanvas.grab { cursor: grab; }
+
+.canvas-status {
+  font-size: 0.65rem;
+  color: var(--dim);
+  min-height: 16px;
+}
+
+/* OP SELECTOR */
+.op-selector { display: flex; gap: 4px; align-items: center; }
+.op-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  border-radius: 5px;
+  border: 1px solid var(--bdr);
+  background: var(--s2);
+  color: var(--dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.op-btn:hover { color: var(--text); border-color: var(--dim); }
+.op-btn.active { border-color: var(--gold); color: var(--gold); background: color-mix(in srgb, var(--gold) 10%, transparent); }
+
+/* 3D TOGGLE */
+.dim-toggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--bdr);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-left: auto;
+}
+.dim-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 5px 12px;
+  background: none;
+  border: none;
+  color: var(--dim);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.dim-btn.active { background: var(--s3); color: var(--cyan); }
+
+/* FORMULA PANEL */
+.formula-panel {
+  background: var(--s2);
+  border-left: 3px solid var(--cyan);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  margin-top: 10px;
+  min-height: 80px;
+}
+.formula-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.62rem;
+  color: var(--cyan);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.result-origin-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--gold) 50%, transparent);
+  border-radius: 4px;
+  color: var(--gold);
+  cursor: pointer;
+  padding: 1px 6px;
+  transition: all 0.15s;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+.result-origin-btn:hover {
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+}
+.formula-body {
+  font-size: 0.78rem;
+  line-height: 1.9;
+  color: var(--text);
+}
+.formula-body .step { display: block; padding: 1px 0; }
+.formula-body .step-label { color: var(--dim); font-size: 0.68rem; }
+.formula-body b { color: var(--gold); font-weight: 600; }
+.formula-body em { color: var(--green); font-style: normal; font-weight: 600; }
+.formula-body .result { color: var(--green); font-size: 0.88rem; font-weight: 600; }
+.formula-body .op-name { color: var(--cyan); }
+
+/* HINT AREA */
+.hint-strip {
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.68rem;
+  color: var(--dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hint-strip .hint-icon { color: var(--cyan); font-size: 0.8rem; }
+
+/* OP ARGS */
+.op-args {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  flex-wrap: wrap;
+}
+.op-args label { color: var(--dim); font-size: 0.65rem; font-family: 'Orbitron', sans-serif; letter-spacing: 0.04em; }
+select {
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  padding: 4px 7px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+select:focus { border-color: var(--cyan); }
+
+/* SCALE INPUT */
+.scale-input-wrap {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.72rem;
+}
+
+/* PLANES TAB */
+.plane-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.plane-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 12px;
+}
+@media (max-width: 700px) { .plane-layout { grid-template-columns: 1fr; } }
+
+.plane-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.plane-pt-item {
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  position: relative;
+}
+.plane-pt-item:hover { border-color: var(--dim); }
+.plane-pt-item.selected { border-color: var(--cyan); box-shadow: 0 0 8px color-mix(in srgb, var(--cyan) 20%, transparent); }
+.plane-pt-item.is-P { border-color: var(--gold); }
+.plane-pt-header {
+  display: flex; align-items: center; gap: 7px; margin-bottom: 4px;
+}
+.plane-pt-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.plane-pt-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.68rem; font-weight: 700;
+  color: var(--text); letter-spacing: 0.05em;
+}
+.plane-pt-coords { font-size: 0.67rem; color: var(--dim); line-height: 1.4; }
+.plane-pt-coords span { color: var(--gold); }
+.plane-set-p-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.55rem; letter-spacing: 0.04em;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--gold) 50%, transparent);
+  border-radius: 3px; color: var(--gold);
+  cursor: pointer; padding: 2px 6px; margin-top: 4px;
+  transition: all 0.15s;
+}
+.plane-set-p-btn:hover { background: color-mix(in srgb, var(--gold) 12%, transparent); }
+.plane-pt-edit-btn {
+  position: absolute; bottom: 6px; right: 6px;
+  background: none; border: none; cursor: pointer;
+  color: var(--dim); font-size: 0.7rem; opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+.plane-pt-item:hover .plane-pt-edit-btn { opacity: 1; }
+.plane-pt-edit-btn:hover { color: var(--cyan); }
+.plane-info-card {
+  background: var(--s2); border: 1px solid var(--bdr);
+  border-radius: 8px; padding: 8px 10px; font-size: 0.67rem;
+}
+.plane-info-card .pi-label {
+  font-family: 'Orbitron', sans-serif; font-size: 0.6rem;
+  color: var(--dim); letter-spacing: 0.05em; margin-bottom: 2px;
+}
+
+.plane-canvas-wrap { display: flex; flex-direction: column; gap: 8px; }
+#planeCanvas {
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  display: block;
+  width: 100%;
+  background: var(--s1);
+  cursor: default;
+}
+.plane-formula-panel {
+  background: var(--s2);
+  border-left: 3px solid var(--violet);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  margin-top: 6px;
+}
+.plane-formula-panel .pf-title {
+  font-family: 'Orbitron', sans-serif; font-size: 0.62rem;
+  color: var(--violet); letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.coeff-row {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.8rem; flex-wrap: wrap;
+}
+.coeff-row .eq-part { color: var(--dim); }
+.coeff-row .eq-var { color: var(--cyan); font-weight: 600; }
+.working-toggle {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.7rem; color: var(--dim);
+}
+.toggle-sw {
+  position: relative; width: 36px; height: 18px; cursor: pointer;
+}
+.toggle-sw input { display: none; }
+.toggle-track {
+  position: absolute; inset: 0; background: var(--s3);
+  border-radius: 9px; transition: background 0.2s;
+}
+.toggle-sw input:checked + .toggle-track { background: var(--cyan); }
+.toggle-thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px; background: var(--bg);
+  border-radius: 50%; transition: left 0.2s;
+}
+.toggle-sw input:checked ~ .toggle-thumb { left: 20px; }
+.working-steps {
+  background: var(--s2);
+  border-left: 3px solid var(--violet);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  font-size: 0.77rem; line-height: 2; display: none;
+}
+.working-steps.visible { display: block; }
+.working-steps .ws-title {
+  font-family: 'Orbitron', sans-serif; font-size: 0.6rem;
+  color: var(--violet); letter-spacing: 0.08em;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.working-steps b { color: var(--gold); }
+.working-steps em { color: var(--green); font-style: normal; }
+.plane-3d-wrap { position: relative; }
+.step-num {
+  display: inline-block;
+  background: rgba(124,58,237,0.2);
+  color: var(--violet);
+  border-radius: 3px;
+  padding: 0 5px;
+  font-size: 0.65rem;
+  margin-right: 5px;
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* selected vector info bar */
+.sel-info {
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.7rem;
+  color: var(--dim);
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sel-info b { color: var(--gold); }
+.sel-info em { color: var(--cyan); font-style: normal; }
+
+/* Right-panel controls padding */
+.right-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* COMPLEX EXPRESSION INPUT */
+.complex-expr-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.complex-expr-input {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 0.82rem !important;
+  width: 220px !important;
+  letter-spacing: 0.02em;
+}
+.complex-expr-input.parse-error {
+  border-color: var(--red) !important;
+  color: var(--red) !important;
+}
+.complex-expr-hint {
+  font-size: 0.62rem;
+  color: var(--dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+.complex-result-pill {
+  display: inline-block;
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  border-radius: 5px;
+  padding: 2px 9px;
+  font-size: 0.75rem;
+  color: var(--gold);
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--s1); }
+::-webkit-scrollbar-thumb { background: var(--bdr); border-radius: 3px; }
+
+/* MATRIX DISPLAY */
+.mat-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  vertical-align: middle;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+.mat-bracket {
+  font-size: 2em;
+  line-height: 1;
+  color: var(--dim);
+  font-weight: 200;
+  padding: 0 2px;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+.mat-cells {
+  display: grid;
+  row-gap: 1px;
+  column-gap: 12px;
+  text-align: right;
+  padding: 2px 0;
+}
+.mat-cells span { display: block; }
+
+/* OFF-ORIGIN NOTICE */
+.offorigin-notice {
+  background: color-mix(in srgb, var(--gold) 8%, var(--s1));
+  border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 6px 6px 0;
+  padding: 8px 12px;
+  font-size: 0.68rem;
+  line-height: 1.65;
+  color: var(--text);
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.offorigin-notice .offorigin-icon { color: var(--gold); font-size: 0.9rem; flex-shrink: 0; margin-top: 1px; }
+.offorigin-notice b  { color: var(--gold); }
+.offorigin-notice em { color: var(--cyan); font-style: normal; }
+
+/* ORIGIN RESET BUTTON on vec cards */
+.vec-origin-btn {
+  position: absolute; bottom: 6px; right: 26px;
+  background: none; border: none;
+  color: var(--dim); cursor: pointer;
+  font-size: 0.75rem; line-height: 1;
+  transition: color 0.15s;
+  padding: 1px 3px;
+}
+.vec-origin-btn:hover { color: var(--cyan); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+  <header>
+    <div class="title-block">
+      <h1>Vector Explorer</h1>
+      <div class="subtitle">Interactive vector calculus — drag, stretch, rotate</div>
+    </div>
+    <div class="header-controls">
+      <div class="slider-row">
+        <label>UI SIZE</label>
+        <input type="range" id="fontSlider" min="11" max="20" step="1" value="14">
+        <span class="val" id="fontVal">14px</span>
+      </div>
+      <div class="slider-row">
+        <label>CANVAS LABELS</label>
+        <input type="range" id="textSzSlider" min="7" max="20" step="1" value="11">
+        <span class="val" id="textSzVal">11px</span>
+      </div>
+      <button class="btn" id="lightBtn">☀ Light</button>
+    </div>
+  </header>
+  <div class="accent-line"></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="vectors">⊕ Vectors</button>
+    <button class="tab-btn" data-tab="planes">▦ Plane Conversion</button>
+  </div>
+
+  <!-- VECTORS TAB -->
+  <div class="tab-panel active" id="tab-vectors">
+    <!-- toolbar row -->
+    <div class="card" style="margin-bottom:10px; padding:10px 14px;">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span class="op-label">Operation:</span>
+        <div class="op-selector" id="opSelector">
+          <button class="op-btn active" data-op="complex">Complex</button>
+          <button class="op-btn" data-op="arg">Arg &amp; Norm</button>
+          <button class="op-btn" data-op="area">Area</button>
+        </div>
+        <div class="op-args" id="opArgs">
+          <!-- filled by JS -->
+        </div>
+        <button class="btn sm" id="resultOriginBtn" style="display:none;" title="Return result arrow to origin">⌖ result</button>
+        <div class="dim-toggle" style="margin-left:auto;">
+          <button class="dim-btn active" id="btn2d">2D</button>
+          <button class="dim-btn" id="btn3d">3D</button>
+        </div>
+        <button class="btn sm" id="resetViewBtn">⊡ Reset View</button>
+      </div>
+    </div>
+
+    <div class="vec-layout">
+      <!-- LEFT: vector list -->
+      <div class="vec-list" id="vecList">
+        <!-- vector items injected by JS -->
+        <button class="add-vec-btn" id="addVecBtn">+ Add Vector</button>
+      </div>
+
+      <!-- RIGHT: canvas + status -->
+      <div class="canvas-wrap">
+        <canvas id="mainCanvas" height="480"></canvas>
+        <div class="sel-info" id="selInfo">Click a vector to select it. Drag its <em>tip</em> to rotate/stretch, or drag the <em>shaft</em> to move it.</div>
+        <div class="canvas-status" id="canvasStatus"></div>
+        <div class="offorigin-notice" id="offOriginNotice" style="display:none;">
+          <span class="offorigin-icon">⚠</span>
+          <span>One or more arrows have been moved off the origin. In <b>Complex</b> and <b>Arg</b> modes, vectors are interpreted as complex numbers whose value is defined solely by their <em>tip coordinates</em> — the tail position is cosmetic. This is no longer the standard complex number picture, and the computed result does not represent a standard complex product or argument. Move all tails back to the origin for correct interpretation.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- formula panel -->
+    <div class="formula-panel" id="formulaPanel">
+      <div class="formula-title" id="formulaTitle">Formula</div>
+      <div class="formula-body" id="formulaBody">
+        <span class="step" style="color:var(--dim)">Add a vector and select an operation to see the working here.</span>
+      </div>
+    </div>
+
+    <div class="hint-strip" style="margin-top:8px;">
+      <span class="hint-icon">💡</span>
+      <span><b style="color:var(--cyan)">Tip:</b> Drag <b style="color:var(--gold)">tip</b> freely &nbsp;·&nbsp; <b style="color:var(--gold)">Ctrl+drag tip</b> rotates &nbsp;·&nbsp; <b style="color:var(--gold)">Shift+drag tip</b> stretches &nbsp;·&nbsp; drag <b style="color:var(--gold)">shaft</b> to move &nbsp;·&nbsp; <b style="color:var(--gold)">Shift+scroll</b> to zoom &nbsp;·&nbsp; plain scroll to pan &nbsp;·&nbsp; in 3D: <b style="color:var(--gold)">Ctrl+scroll</b> orbits</span>
+    </div>
+  </div>
+
+  <!-- PLANES TAB -->
+  <div class="tab-panel" id="tab-planes">
+
+    <!-- Top toolbar: equation inputs + mode toggle + controls -->
+    <div class="card" style="margin-bottom:10px; padding:10px 14px;">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div class="dim-toggle" id="planeModeToggle">
+          <button class="dim-btn" data-mode="normal">Normal</button>
+          <button class="dim-btn active" data-mode="threepoint">3 Points</button>
+        </div>
+        <span class="op-label" style="margin-left:4px;">ax+by+cz=d:</span>
+        <div class="coeff-row" id="planeEqRow">
+          <input type="text" id="pa" value="1" style="width:48px">
+          <span class="eq-var">x</span><span class="eq-part">+</span>
+          <input type="text" id="pb" value="2" style="width:48px">
+          <span class="eq-var">y</span><span class="eq-part">+</span>
+          <input type="text" id="pc" value="1" style="width:48px">
+          <span class="eq-var">z</span><span class="eq-part">=</span>
+          <input type="text" id="pd" value="4" style="width:48px">
+        </div>
+        <button class="btn pri" id="computePlaneBtn">▶ Compute</button>
+        <button class="btn" id="randPlaneBtn">🎲 Random</button>
+        <button class="btn sm" id="resetPlaneViewBtn" style="margin-left:auto;">⊡ Reset View</button>
+        <button class="btn sm" id="facePlaneBtn" title="Rotate view to face the plane head-on">⊙ Face Plane</button>
+      </div>
+    </div>
+
+    <!-- Main grid: sidebar + canvas -->
+    <div class="plane-layout">
+      <!-- Sidebar -->
+      <div class="plane-sidebar" id="planeSidebar">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Canvas area -->
+      <div class="plane-canvas-wrap">
+        <canvas id="planeCanvas" height="480"></canvas>
+        <div class="canvas-status" id="planeStatus" style="font-size:0.65rem;color:var(--dim);min-height:16px;"></div>
+        <div class="hint-strip" style="font-size:0.63rem;">
+          <span class="hint-icon">🖱</span>
+          <span id="planeHint">Drag to pan &nbsp;·&nbsp; Ctrl+drag to orbit &nbsp;·&nbsp; Shift+scroll to zoom &nbsp;·&nbsp; Drag <b style="color:var(--gold)">P</b> or <b style="color:var(--red)">n</b> to reshape plane</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Working steps below canvas -->
+    <div style="margin-top:8px; display:flex; align-items:center; gap:10px;">
+      <div class="working-toggle">
+        <label class="toggle-sw">
+          <input type="checkbox" id="showWorkingToggle">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+        <span style="font-family:'Orbitron',sans-serif; font-size:0.62rem; letter-spacing:0.05em;">Show Working</span>
+      </div>
+    </div>
+    <div class="working-steps" id="workingSteps">
+      <div class="ws-title">Step-by-step derivation</div>
+      <div id="workingBody"></div>
+    </div>
+
+    <!-- Parametric result panel -->
+    <div class="plane-formula-panel" id="planePanelWrap" style="margin-top:8px;">
+      <div class="pf-title">Parametric Form</div>
+      <div id="planeResult" style="font-size:0.78rem; line-height:1.8; color:var(--dim);">Press Compute to see the parametric form.</div>
+    </div>
+  </div>
+</div>
+
+<script src="vector-explorer.obf.js"></script>
+</body>
+</html>

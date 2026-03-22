@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complex nth Roots — Terminal Visualiser</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050810;--s1:#0a0f1e;--s2:#0f1628;--s3:#141c35;--cyan:#00d4ff;--gold:#ffd700;--green:#00ffa3;--red:#ff6b6b;--violet:#7c3aed;--text:#e0e8ff;--dim:#6a7a9a;--bdr:#1e2d50;}
+.light{--bg:#f0f4ff;--s1:#e4eaf8;--s2:#d8e2f4;--s3:#ccd6ee;--cyan:#006b99;--gold:#7a5500;--green:#005522;--red:#bb2233;--violet:#3a0099;--text:#1a2040;--dim:#4a5890;--bdr:#b0bcd8;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;min-height:100vh;overflow-x:hidden;transition:background .4s,color .4s;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 50% 50% at 0% 0%,rgba(0,212,255,.04) 0%,transparent 60%),
+             radial-gradient(ellipse 50% 50% at 100% 100%,rgba(124,58,237,.05) 0%,transparent 60%);}
+.wrap{position:relative;z-index:1;max-width:1060px;margin:0 auto;padding:14px;}
+h1{font-family:'Orbitron',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);text-shadow:0 0 20px rgba(0,212,255,.4);margin-bottom:3px;}
+.sub{font-size:.7rem;color:var(--dim);letter-spacing:.05em;margin-bottom:12px;}
+.aline{height:1px;margin-bottom:14px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5;}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:14px;margin-bottom:12px;transition:background .3s,border .3s;}
+.crow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:10px;}
+.field{display:flex;flex-direction:column;gap:3px;}
+.field label{font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);}
+.field input,.field select{background:var(--s2);border:1px solid var(--bdr);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.8rem;padding:5px 8px;border-radius:6px;width:110px;outline:none;transition:border .2s;}
+.field input:focus,.field select:focus{border-color:var(--cyan);}
+.field select{width:158px;}
+.brow{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;align-items:center;}
+button{font-family:'Orbitron',sans-serif;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:6px 11px;border-radius:6px;border:1px solid var(--bdr);cursor:pointer;transition:all .18s;background:var(--s2);color:var(--text);}
+button:hover{border-color:var(--cyan);color:var(--cyan);}
+button.pri{background:linear-gradient(135deg,rgba(0,180,220,.25),rgba(0,80,120,.3));border-color:var(--cyan);color:var(--cyan);}
+button.pri:hover{background:linear-gradient(135deg,rgba(0,212,255,.4),rgba(0,120,180,.4));}
+button:disabled{opacity:.3;cursor:not-allowed;}
+.ctrl-group{display:flex;align-items:center;gap:6px;}
+.ctrl-group label{font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);white-space:nowrap;}
+.lever{display:flex;background:var(--s3);border:1px solid var(--bdr);border-radius:20px;padding:2px;gap:2px;}
+.lever button{font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:16px;border:none;background:transparent;color:var(--dim);cursor:pointer;transition:all .18s;min-width:32px;}
+.lever button.active{background:var(--cyan);color:#050810 !important;font-weight:700;}
+.lever button:hover:not(.active){color:var(--text);}
+.slider-wrap{display:flex;align-items:center;gap:7px;}
+.slider-wrap label{font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:78px;height:3px;border-radius:2px;background:var(--bdr);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--cyan);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--cyan);border:none;cursor:pointer;}
+.stage-wrap{position:relative;overflow:hidden;border-radius:10px;background:var(--s1);border:1px solid var(--bdr);margin-bottom:12px;min-height:400px;display:flex;justify-content:center;align-items:center;cursor:grab;}
+.stage-wrap:active{cursor:grabbing;}
+canvas{display:block;border-radius:6px;touch-action:none;}
+.zoom-hint{position:absolute;bottom:8px;right:10px;font-size:.6rem;color:var(--dim);pointer-events:none;opacity:.6;}
+.pw{height:3px;border-radius:2px;overflow:hidden;background:var(--s3);margin:8px 0 5px;}
+.pb{height:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));width:0%;border-radius:2px;}
+.stl{font-size:.65rem;color:var(--dim);letter-spacing:.04em;min-height:1.1em;}
+.expl{background:var(--s2);border-left:3px solid var(--cyan);border-radius:0 8px 8px 0;padding:9px 13px;font-size:.71rem;line-height:1.72;color:var(--text);margin-bottom:10px;}
+.expl .ph{font-family:'Orbitron',sans-serif;font-size:.57rem;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan);margin-bottom:4px;}
+.expl b{color:var(--gold);} .expl em{color:var(--green);}
+.istrip{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+@media(max-width:540px){.istrip{grid-template-columns:1fr;}}
+.ic{background:var(--s2);border:1px solid var(--bdr);border-radius:8px;padding:8px 11px;}
+.ic h3{font-family:'Orbitron',sans-serif;font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:4px;}
+.ic .v{font-size:.72rem;color:var(--text);line-height:1.65;}
+.ic .v span{color:var(--gold);}
+.leg{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px;}
+.li{display:flex;align-items:center;gap:5px;font-size:.63rem;color:var(--dim);}
+.ld{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Complex n<sup>th</sup> Roots</h1>
+  <p class="sub">Why z<sup>n</sup> = w has exactly n distinct solutions in &#8450;</p>
+  <div class="aline"></div>
+
+  <div class="card">
+    <div class="crow">
+      <div class="field"><label>n (degree)</label><input type="number" id="inp-n" value="4" min="2" max="10" step="1"></div>
+      <div class="field"><label>Format</label>
+        <select id="inp-fmt">
+          <option value="rect">a + bi</option>
+          <option value="polar">r · e^(iθ)</option>
+          <option value="trig">r(cosθ + i sinθ)</option>
+        </select>
+      </div>
+      <div id="ri" class="crow" style="gap:8px;margin:0">
+        <div class="field"><label>a (Re)</label><input type="number" id="inp-a" value="0" step="0.5"></div>
+        <div class="field"><label>b (Im)</label><input type="number" id="inp-b" value="1" step="0.5"></div>
+      </div>
+      <div id="pi2" class="crow" style="gap:8px;margin:0;display:none">
+        <div class="field"><label>r</label><input type="number" id="inp-r" value="1" step="0.1" min="0.001"></div>
+        <div class="field"><label id="th-label">θ (×π)</label><input type="number" id="inp-th" value="0.5" step="0.05"></div>
+      </div>
+    </div>
+    <div class="brow">
+      <button class="pri" id="brun">&#9654; Run</button>
+      <button id="bpause" disabled>&#9208; Pause</button>
+      <button id="bback" disabled>&#9664; Back</button>
+      <button id="bfwd" disabled>Fwd &#9654;</button>
+      <button id="breset">&#8635; Reset</button>
+      <button id="brand">&#127922; Rand</button>
+      <button id="blight">&#9728; Light</button>
+      <div class="slider-wrap">
+        <label>Speed</label>
+        <input type="range" id="spd" min="0.3" max="3" step="0.1" value="1">
+        <span id="spd-val" style="font-size:.68rem;color:var(--cyan);min-width:28px;">1.0×</span>
+      </div>
+      <div class="slider-wrap">
+        <label>Text</label>
+        <input type="range" id="txt-sz" min="7" max="22" step="1" value="11">
+        <span id="txt-val" style="font-size:.68rem;color:var(--cyan);min-width:24px;">11</span>
+      </div>
+      <div class="ctrl-group">
+        <label>Angle</label>
+        <div class="lever" id="ang-lever">
+          <button id="ang-pi" class="active">π</button>
+          <button id="ang-deg">deg</button>
+          <button id="ang-rad">rad</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="expl" id="expl">
+    <div class="ph">Instructions</div>
+    Set <b>w</b> and <b>n</b>, then press <b>&#9654; Run</b>. <b>&#9664;/&#9654;</b> step · <b>scroll/pinch</b> zoom · <b>drag</b> pan · angle/text controls above.
+  </div>
+
+  <div class="stage-wrap" id="stage-wrap">
+    <canvas id="cv"></canvas>
+    <div class="zoom-hint">scroll/pinch · drag to pan</div>
+  </div>
+  <div class="pw"><div class="pb" id="pb"></div></div>
+  <div class="stl" id="stl">Ready.</div>
+
+  <div class="istrip">
+    <div class="ic"><h3>w</h3><div class="v" id="iw">&#8212;</div></div>
+    <div class="ic"><h3>n<sup>th</sup> roots</h3><div class="v" id="ir">&#8212;</div></div>
+  </div>
+  <div class="leg" id="leg"></div>
+</div>
+
+<script src="complex_roots.obf.js"></script>
+</body>
+</html>

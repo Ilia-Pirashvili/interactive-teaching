@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elementary Logic — Interactive Explainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050810;
+  --s1: #0a0f1e;
+  --s2: #0f1628;
+  --s3: #141c35;
+  --cyan: #00d4ff;
+  --gold: #ffd700;
+  --green: #00ffa3;
+  --red: #ff6b6b;
+  --violet: #7c3aed;
+  --orange: #ff9500;
+  --text: #e0e8ff;
+  --dim: #6a7a9a;
+  --bdr: #1e2d50;
+  --card-shadow: 0 4px 24px rgba(0,212,255,0.06);
+}
+.light {
+  --bg: #f0f4ff;
+  --s1: #ffffff;
+  --s2: #e8eef8;
+  --s3: #dde5f5;
+  --cyan: #0077aa;
+  --gold: #b8860b;
+  --green: #007a50;
+  --red: #cc3333;
+  --violet: #5b21b6;
+  --orange: #c07000;
+  --text: #1a1f2e;
+  --dim: #5a6a8a;
+  --bdr: #b0c0dd;
+  --card-shadow: 0 4px 24px rgba(0,119,170,0.1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.3s, color 0.3s;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 10% 10%, rgba(0,212,255,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 90% 90%, rgba(124,58,237,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.light body::before {
+  background:
+    radial-gradient(ellipse at 10% 10%, rgba(0,119,170,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse at 90% 90%, rgba(91,33,182,0.05) 0%, transparent 60%);
+}
+
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Header ── */
+.header { margin-bottom: 20px; }
+h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 900;
+}
+.subtitle {
+  color: var(--dim);
+  font-size: 0.8rem;
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+.accent-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  margin: 16px 0;
+}
+
+/* ── Main Tabs ── */
+.main-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 4px;
+}
+.main-tab {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--dim);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.main-tab.active {
+  background: var(--s3);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 12px rgba(0,212,255,0.15);
+}
+.main-tab:hover:not(.active) { color: var(--text); }
+
+/* ── Topic panels ── */
+.topic-panel { display: none; }
+.topic-panel.active { display: block; }
+
+/* ── Sub Tabs ── */
+.sub-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+.sub-tab {
+  padding: 7px 20px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 6px;
+  color: var(--dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sub-tab.active {
+  background: var(--s3);
+  border-color: var(--green);
+  color: var(--green);
+}
+.sub-tab:hover:not(.active) { color: var(--text); }
+
+.sub-panel { display: none; }
+.sub-panel.active { display: block; }
+
+/* ── Cards ── */
+.card {
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: var(--card-shadow);
+}
+
+/* ── Controls ── */
+.ctrl-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.ctrl-row:last-child { margin-bottom: 0; }
+
+label.field-lbl {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+input[type=number], select, input[type=text] {
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  padding: 5px 8px;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 60px;
+}
+input[type=number]:focus, select:focus, input[type=text]:focus {
+  border-color: var(--cyan);
+}
+select { cursor: pointer; }
+
+.btn {
+  padding: 7px 14px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--dim); color: var(--cyan); }
+.btn.pri {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 8px rgba(0,212,255,0.2);
+}
+.btn.pri:hover { box-shadow: 0 0 16px rgba(0,212,255,0.35); background: rgba(0,212,255,0.07); }
+.btn.danger { border-color: var(--red); color: var(--red); }
+.btn.success { border-color: var(--green); color: var(--green); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  color: var(--dim);
+  text-transform: uppercase;
+}
+.slider-wrap span { color: var(--cyan); min-width: 36px; }
+input[type=range] {
+  accent-color: var(--cyan);
+  width: 80px;
+  cursor: pointer;
+}
+
+/* ── Explanation box ── */
+.explain-box {
+  background: var(--s2);
+  border-left: 3px solid var(--cyan);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  min-height: 56px;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.explain-box .phase-hdr {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.explain-box b { color: var(--gold); }
+.explain-box em { color: var(--green); font-style: normal; }
+
+/* ── Progress bar ── */
+.progress-bar-wrap {
+  height: 3px;
+  background: var(--s3);
+  border-radius: 2px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  border-radius: 2px;
+  transition: width 0.1s linear;
+  width: 0%;
+}
+
+.status-line {
+  font-size: 0.72rem;
+  color: var(--dim);
+  margin-bottom: 14px;
+  min-height: 18px;
+  letter-spacing: 0.03em;
+}
+
+/* ── Truth Table ── */
+.tt-wrap {
+  overflow-x: auto;
+  margin-bottom: 14px;
+}
+.tt-table {
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  min-width: 100%;
+}
+.tt-table th {
+  background: var(--s2);
+  color: var(--cyan);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 7px 12px;
+  border: 1px solid var(--bdr);
+  white-space: nowrap;
+}
+.tt-table td {
+  padding: 6px 12px;
+  border: 1px solid var(--bdr);
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  transition: background 0.25s, color 0.25s;
+  min-width: 48px;
+}
+.tt-table tr:nth-child(even) td { background: var(--s2); }
+.tt-table tr:nth-child(odd) td { background: var(--s1); }
+.tt-cell-T { color: var(--green) !important; font-weight: 700; }
+.tt-cell-F { color: var(--red) !important; }
+.tt-cell-blank { color: var(--dim); }
+
+.tt-hl-primary { background: rgba(0,212,255,0.18) !important; }
+.tt-hl-secondary { background: rgba(255,215,0,0.13) !important; }
+.tt-hl-result { background: rgba(0,255,163,0.14) !important; }
+.tt-hl-false { background: rgba(255,107,107,0.13) !important; }
+.tt-col-final th { color: var(--gold) !important; border-color: var(--gold) !important; }
+
+/* ── Formula display ── */
+.formula-display {
+  font-size: 1.1rem;
+  color: var(--text);
+  padding: 10px 14px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 7px;
+  margin-bottom: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+  cursor: text;
+}
+.formula-display .var { color: var(--cyan); }
+.formula-display .op { color: var(--gold); }
+.formula-display .paren { color: var(--dim); }
+.formula-display .bracket-hl { background: rgba(0,212,255,0.15); border-radius: 3px; cursor: pointer; }
+.formula-display .bracket-hl:hover { background: rgba(0,212,255,0.3); }
+
+/* ── Interactive formula editor ── */
+.formula-editor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.formula-input {
+  flex: 1;
+  min-width: 200px;
+  font-size: 0.95rem;
+  padding: 7px 12px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  outline: none;
+}
+.formula-input:focus { border-color: var(--cyan); }
+.formula-input.error { border-color: var(--red); animation: shake 0.3s; }
+@keyframes shake {
+  0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-4px)} 40%,80%{transform:translateX(4px)}
+}
+.formula-input.ok { border-color: var(--green); }
+
+/* ── Interactive table input cells ── */
+.tt-input-cell {
+  background: var(--s2) !important;
+  border: 1px solid var(--bdr);
+  border-radius: 3px;
+  width: 36px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+  padding: 3px 4px;
+}
+.tt-input-cell:focus { border-color: var(--cyan); }
+.tt-input-cell.correct { background: rgba(0,255,163,0.18) !important; color: var(--green) !important; border-color: var(--green) !important; }
+.tt-input-cell.wrong { background: rgba(255,107,107,0.18) !important; color: var(--red) !important; border-color: var(--red) !important; animation: shake 0.3s; }
+
+/* ── Bool conversion area ── */
+.bool-expr-display {
+  font-size: 1rem;
+  padding: 10px 14px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 7px;
+  margin-bottom: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.8;
+}
+.bool-expr-display .bracket-hover {
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 0 1px;
+  transition: background 0.15s;
+}
+.bool-expr-display .bracket-hover:hover {
+  background: rgba(0,212,255,0.2);
+}
+.bool-expr-display .bracket-hover.selected {
+  background: rgba(0,212,255,0.3);
+  outline: 1px solid var(--cyan);
+}
+.bool-expr-display .translated {
+  color: var(--green);
+}
+
+.steps-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 7px;
+  font-size: 0.82rem;
+}
+.step-row .step-lbl {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  color: var(--dim);
+  text-transform: uppercase;
+  min-width: 60px;
+  margin-top: 2px;
+}
+.step-row .step-val { color: var(--gold); }
+.step-row .step-simplified { color: var(--green); }
+.step-row.active { border-color: var(--cyan); background: rgba(0,212,255,0.05); }
+
+/* ── bool-step sub-steps ── */
+.bs-main { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.bs-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bs-substeps {
+  margin-top: 4px;
+  border-left: 2px solid var(--bdr);
+  padding-left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.bs-substep { font-size: 0.78rem; color: var(--dim); line-height: 1.5; }
+.bs-substep-lbl { font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.05em; margin-right: 4px; }
+.bs-substep-expr { color: var(--text); font-family: 'JetBrains Mono', monospace; }
+.bs-rule-tmpl { color: var(--violet); font-style: italic; font-size: 0.82rem; }
+.bs-subst-line { font-size: 0.8rem; color: var(--dim); margin-top: 2px; }
+.bs-subst-val { color: var(--gold); font-style: normal; }
+.bs-finalline { margin-top: 3px; }
+
+
+/* ── Popover input ── */
+.popover {
+  position: absolute;
+  background: var(--s1);
+  border: 1px solid var(--cyan);
+  border-radius: 8px;
+  padding: 10px 12px;
+  z-index: 100;
+  box-shadow: 0 8px 32px rgba(0,212,255,0.2);
+  min-width: 200px;
+}
+.popover input {
+  width: 100%;
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  outline: none;
+  margin-bottom: 8px;
+}
+.popover input:focus { border-color: var(--cyan); }
+.popover .popover-hint {
+  font-size: 0.7rem;
+  color: var(--dim);
+}
+.popover .popover-hint b { color: var(--text); }
+
+/* ── Info strip ── */
+.info-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.info-card {
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+}
+.info-card .ic-lbl {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.58rem;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 4px;
+}
+.info-card .ic-val { color: var(--gold); font-size: 0.85rem; }
+
+/* ── Notation key ── */
+.notation-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 0.68rem;
+  color: var(--dim);
+  margin-top: 16px;
+  margin-bottom: 0;
+  padding: 7px 14px 7px 12px;
+  background: var(--s2);
+  border-radius: 6px;
+  border: 1px solid var(--bdr);
+  border-left: 3px solid rgba(255,215,0,0.4);
+  opacity: 0.72;
+  transition: opacity 0.2s;
+}
+.notation-key:hover { opacity: 1; }
+.notation-key::before {
+  content: 'notation';
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.52rem;
+  color: rgba(255,215,0,0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  width: 100%;
+  margin-bottom: 3px;
+}
+.notation-key span { color: var(--gold); }
+.notation-key .nk-item { display: flex; gap: 4px; align-items: center; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--s2); }
+::-webkit-scrollbar-thumb { background: var(--bdr); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+
+/* ── Animations ── */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.fade-in { animation: fadeIn 0.25s ease forwards; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.pulse { animation: pulse 1s infinite; }
+@keyframes cellAppear { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+.cell-appear { animation: cellAppear 0.2s ease forwards; }
+
+/* ── Reject animation ── */
+@keyframes rejectPop {
+  0%{transform:scale(1)} 30%{transform:scale(1.1);filter:brightness(1.3)} 60%{transform:scale(0.95)} 100%{transform:scale(1)}
+}
+.reject-anim { animation: rejectPop 0.4s ease; border-color: var(--red) !important; color: var(--red) !important; }
+@keyframes correctPop {
+  0%{transform:scale(1)} 40%{transform:scale(1.12);} 100%{transform:scale(1)}
+}
+.correct-anim { animation: correctPop 0.35s ease; }
+
+/* ── History nav ── */
+.history-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: var(--dim);
+}
+.history-nav .step-count { color: var(--cyan); }
+
+/* ── Bool steps display ── */
+.bool-chain {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+.bool-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.82rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.3s;
+}
+.bool-step.highlighted { border-color: var(--cyan); background: rgba(0,212,255,0.06); }
+.bool-step .bs-idx { color: var(--dim); font-size: 0.7rem; min-width: 20px; margin-top: 3px; flex-shrink: 0; }
+.bool-step .bs-orig { color: var(--text); }
+.bool-step .bs-arrow { color: var(--dim); }
+.bool-step .bs-result { color: var(--gold); }
+.bool-step .bs-simplified { color: var(--green); font-size: 0.82rem; }
+
+/* ── Nested sub-steps for IMP/IFF elementary expansion ── */
+.bs-nested-steps {
+  margin-top: 8px;
+  border-left: 2px solid var(--violet);
+  padding-left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.bool-substep {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.8rem;
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--bdr);
+  background: var(--s2);
+}
+.bool-substep.highlighted { border-color: var(--violet); background: rgba(124,58,237,0.08); }
+.bool-substep .bs-idx { color: var(--violet); font-size: 0.68rem; min-width: 28px; margin-top: 2px; flex-shrink: 0; }
+
+/* ── Elementary-only toggle ── */
+.elem-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.62rem;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  cursor: pointer;
+  user-select: none;
+}
+.elem-toggle input[type=checkbox] { display: none; }
+.toggle-track {
+  width: 32px; height: 16px;
+  background: var(--s3);
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  position: relative;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  left: 2px; top: 2px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--dim);
+  transition: transform 0.2s, background 0.2s;
+}
+.elem-toggle input:checked + .toggle-track {
+  background: rgba(124,58,237,0.25);
+  border-color: var(--violet);
+}
+.elem-toggle input:checked + .toggle-track::after {
+  transform: translateX(16px);
+  background: var(--violet);
+}
+
+/* ── Simplified result ── */
+.simplified-banner {
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: rgba(0,255,163,0.07);
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+.simplified-banner .sb-lbl {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.simplified-banner .sb-val { color: var(--gold); }
+
+/* ── Var selector pills ── */
+.pill-group {
+  display: flex;
+  gap: 4px;
+  background: var(--s3);
+  border: 1px solid var(--bdr);
+  border-radius: 20px;
+  padding: 3px;
+}
+.pill {
+  padding: 4px 12px;
+  border-radius: 16px;
+  border: none;
+  background: transparent;
+  color: var(--dim);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.pill.active {
+  background: var(--cyan);
+  color: #050810;
+  font-weight: 700;
+}
+.pill:hover:not(.active) { color: var(--text); }
+
+/* Light toggle button */
+#tt-theme-btn, #bl-theme-btn { font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <h1>Elementary Logic</h1>
+    <div class="subtitle">Interactive visualiser · truth tables · boolean algebra</div>
+    <div class="accent-line"></div>
+  </div>
+
+  <!-- Main tabs + font slider -->
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+    <div class="main-tabs" style="margin-bottom:0;flex:1;min-width:0">
+      <button class="main-tab active" id="tab-tt" onclick="switchMain('tt')">📋 Truth Tables</button>
+      <button class="main-tab" id="tab-bl" onclick="switchMain('bl')">🔢 Logic → Boolean</button>
+      <button class="main-tab" id="tab-lb" onclick="switchMain('lb')">🔁 Boolean → Logic</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+      <span style="font-size:0.7rem;color:var(--dim)">A</span>
+      <input type="range" id="font-size-slider" min="7" max="22" step="1" value="14"
+        style="width:80px;accent-color:var(--cyan);cursor:pointer"
+        oninput="setFontSize(+this.value)">
+      <span style="font-size:0.95rem;color:var(--dim)">A</span>
+      <span id="font-size-val" style="font-size:0.7rem;color:var(--dim);min-width:28px">14px</span>
+      <button class="btn" id="theme-btn" onclick="toggleTheme()" style="padding:7px 12px;">☀ Light</button>
+    </div>
+  </div>
+
+  <!-- ═══ TOPIC 1: TRUTH TABLES ═══ -->
+  <div class="topic-panel active" id="panel-tt">
+    <div class="sub-tabs">
+      <button class="sub-tab active" id="ttst-demo" onclick="switchSub('tt','demo')">🎬 Demonstration</button>
+      <button class="sub-tab" id="ttst-int" onclick="switchSub('tt','int')">✏️ Interactive</button>
+    </div>
+
+    <!-- TT Demo sub-panel -->
+    <div class="sub-panel active" id="tt-demo">
+      <div class="card">
+        <div class="ctrl-row">
+          <label class="field-lbl">Variables
+            <div class="pill-group" id="tt-varcount">
+              <button class="pill" onclick="setVarCount(2)">2</button>
+              <button class="pill active" onclick="setVarCount(3)">3</button>
+              <button class="pill" onclick="setVarCount(4)">4</button>
+            </div>
+          </label>
+          <label class="field-lbl">Formula
+            <div class="formula-editor">
+              <input class="formula-input" id="tt-formula-input" type="text" value="(P∧Q)∨(¬R)" placeholder="e.g. (P∧Q)∨(¬R)" style="min-width:220px">
+              <button class="btn" onclick="ttParseFormula()">Load</button>
+            </div>
+          </label>
+        </div>
+        <div class="ctrl-row">
+          <button class="btn pri" id="tt-run-btn" onclick="ttDemoRun()">▶ Run</button>
+          <button class="btn" id="tt-pause-btn" onclick="ttDemoPause()" disabled>⏸ Pause</button>
+          <button class="btn" id="tt-back-btn" onclick="ttDemoBack()" disabled>◀ Back</button>
+          <button class="btn" id="tt-fwd-btn" onclick="ttDemoFwd()">Fwd ▶</button>
+          <button class="btn" id="tt-reset-btn" onclick="ttDemoReset()">↺ Reset</button>
+          <button class="btn" onclick="ttDemoRand()">🎲 Rand</button>
+          <div class="slider-wrap">
+            Speed
+            <input type="range" id="tt-speed" min="0.3" max="3" step="0.1" value="1">
+            <span id="tt-speed-val">1.0×</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="explain-box" id="tt-explain">
+        <div class="phase-hdr">Ready</div>
+        Enter a formula and press <b>Run</b> to see the truth table built step by step, or press <b>Fwd ▶</b> to step through immediately.
+      </div>
+
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="tt-progress"></div></div>
+      <div class="status-line" id="tt-status">idle</div>
+
+      <div class="tt-wrap" id="tt-demo-table-wrap">
+        <!-- Table built dynamically -->
+      </div>
+
+      <div class="info-strip" id="tt-demo-info"></div>
+
+      <div class="notation-key">
+        <div class="nk-item"><span>∧</span> AND (type: &amp; or ^)</div>
+        <div class="nk-item"><span>∨</span> OR (type: | or v)</div>
+        <div class="nk-item"><span>¬</span> NOT (type: ~ or !)</div>
+        <div class="nk-item"><span>→</span> IMPLIES (type: -&gt; or =&gt;)</div>
+        <div class="nk-item"><span>↔</span> IFF (type: &lt;-&gt;)</div>
+      </div>
+    </div>
+
+    <!-- TT Interactive sub-panel -->
+    <div class="sub-panel" id="tt-int">
+      <div class="card">
+        <div class="ctrl-row" style="align-items:flex-end;flex-wrap:wrap;">
+          <label class="field-lbl">Variables
+            <div class="pill-group" id="tti-varcount">
+              <button class="pill" onclick="setVarCountI(2)">2</button>
+              <button class="pill active" onclick="setVarCountI(3)">3</button>
+              <button class="pill" onclick="setVarCountI(4)">4</button>
+            </div>
+          </label>
+          <label class="field-lbl">Formula
+            <div class="formula-editor">
+              <input class="formula-input" id="tti-formula-input" type="text" value="(P∧Q)∨(¬R)" style="min-width:220px">
+              <button class="btn" onclick="ttiLoadFormula()">Load</button>
+            </div>
+          </label>
+          <button class="btn" onclick="ttiRand()" style="margin-bottom:0">🎲 Rand</button>
+          <button class="btn" onclick="ttiReset()" style="margin-bottom:0">↺ Reset</button>
+          <button class="btn success" onclick="ttiCheck()" style="margin-bottom:0">✓ Check</button>
+        </div>
+      </div>
+
+      <div class="explain-box" id="tti-explain">
+        <div class="phase-hdr">Interactive Mode</div>
+        Hover over a <b>(</b> open-bracket to highlight that sub-expression. <b>Click the bracket</b> to add it as an intermediate column. Fill in T/F values using your keyboard.
+      </div>
+
+      <div id="tti-formula-display" class="formula-display" style="margin-bottom:10px;"></div>
+
+      <div class="tt-wrap" id="tt-int-table-wrap"></div>
+
+      <div class="status-line" id="tti-status"></div>
+      <div class="info-strip" id="tti-info"></div>
+
+      <div class="notation-key">
+        <div class="nk-item"><span>∧</span> AND (type: &amp; or ^)</div>
+        <div class="nk-item"><span>∨</span> OR (type: | or v)</div>
+        <div class="nk-item"><span>¬</span> NOT (type: ~ or !)</div>
+        <div class="nk-item"><span>→</span> IMPLIES (type: -&gt; or =&gt;)</div>
+        <div class="nk-item"><span>↔</span> IFF (type: &lt;-&gt;)</div>
+        <div class="nk-item" style="width:100%;margin-top:2px;font-size:0.63rem">Hover a <b style="color:var(--text)">(</b> bracket to highlight · click to add column · type <b style="color:var(--text)">T/F</b> or <b style="color:var(--text)">1/0</b> in cells</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TOPIC 2: LOGIC → BOOLEAN ═══ -->
+  <div class="topic-panel" id="panel-bl">
+    <div class="sub-tabs">
+      <button class="sub-tab active" id="blst-demo" onclick="switchSub('bl','demo')">🎬 Demonstration</button>
+      <button class="sub-tab" id="blst-int" onclick="switchSub('bl','int')">✏️ Interactive</button>
+    </div>
+
+    <!-- BL Demo sub-panel -->
+    <div class="sub-panel active" id="bl-demo">
+      <div class="card">
+        <div class="ctrl-row" style="align-items:flex-end">
+          <label class="field-lbl">Formula
+            <div class="formula-editor">
+              <input class="formula-input" id="bl-formula-input" type="text" value="(P∧Q)∨(¬R)" style="min-width:220px">
+              <button class="btn" onclick="blDemoLoad()">Load</button>
+            </div>
+          </label>
+          <button class="btn" onclick="blDemoRand()" style="margin-bottom:0">🎲 Rand</button>
+        </div>
+        <div class="ctrl-row">
+          <button class="btn pri" id="bl-run-btn" onclick="blDemoRun()">▶ Run</button>
+          <button class="btn" id="bl-pause-btn" onclick="blDemoPause()" disabled>⏸ Pause</button>
+          <button class="btn" id="bl-back-btn" onclick="blDemoBack()" disabled>◀ Back</button>
+          <button class="btn" id="bl-fwd-btn" onclick="blDemoFwd()">Fwd ▶</button>
+          <button class="btn" id="bl-reset-btn" onclick="blDemoReset()">↺ Reset</button>
+          <div class="slider-wrap">
+            Speed
+            <input type="range" id="bl-speed" min="0.3" max="3" step="0.1" value="1">
+            <span id="bl-speed-val">1.0×</span>
+          </div>
+          <label class="elem-toggle" title="On: expand \u2192 and \u2194 into \u00ac/\u2227/\u2228 steps. Off: direct polynomial rules for all 5.">
+            <input type="checkbox" id="bl-elem-only" checked onchange="blDemoReset()">
+            <span class="toggle-track"></span>
+            Elem. only
+          </label>
+        </div>
+      </div>
+
+      <div class="explain-box" id="bl-explain">
+        <div class="phase-hdr">Ready</div>
+        Enter a logical formula. Press <b>Run</b> to see it converted to a Boolean polynomial expression step by step, with each connective resolved in bracket order and then simplified mod 2.
+      </div>
+
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="bl-progress"></div></div>
+      <div class="status-line" id="bl-status">idle</div>
+
+      <div class="bool-chain" id="bl-chain"></div>
+      <div class="simplified-banner" id="bl-simplified" style="display:none"></div>
+
+      <div class="info-strip" id="bl-info"></div>
+
+      <div class="notation-key" style="border-left-color:rgba(0,255,163,0.4)" id="bl-notation-key">
+        <div class="nk-item">¬P → <span>1+x</span></div>
+        <div class="nk-item">P∧Q → <span>x·y</span></div>
+        <div class="nk-item">P∨Q → <span>x+y+xy</span></div>
+        <div class="nk-item" id="bl-nk-imp">P→Q → <span>(¬P)∨Q</span> <em style="color:var(--dim);font-style:normal">(expand first)</em></div>
+        <div class="nk-item" id="bl-nk-iff">P↔Q → <span>(P∧Q)∨((¬P)∧(¬Q))</span> <em style="color:var(--dim);font-style:normal">(expand first)</em></div>
+        <div class="nk-item" style="width:100%;margin-top:2px;font-size:0.63rem">Logical variables P,Q,R,… map to Boolean variables x,y,z,… · all arithmetic mod 2</div>
+      </div>
+    </div>
+
+    <!-- BL Interactive sub-panel -->
+    <div class="sub-panel" id="bl-int">
+      <div class="card">
+        <div class="ctrl-row" style="align-items:flex-end;flex-wrap:wrap;">
+          <label class="field-lbl">Formula
+            <div class="formula-editor">
+              <input class="formula-input" id="bli-formula-input" type="text" value="(P∧Q)∨(¬R)" style="min-width:220px">
+              <button class="btn" onclick="bliLoad()">Load</button>
+            </div>
+          </label>
+          <button class="btn" onclick="bliRand()" style="margin-bottom:0">🎲 Rand</button>
+          <button class="btn" onclick="bliReset()" style="margin-bottom:0">↺ Reset</button>
+          <div class="history-nav" style="margin-left:auto">
+            <button class="btn" id="bli-back-btn" onclick="bliHistBack()" disabled>◀ Back</button>
+            <button class="btn" id="bli-fwd-btn" onclick="bliHistFwd()" disabled>Fwd ▶</button>
+            <span>Step </span><span class="step-count" id="bli-step-count">0 / 0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="explain-box" id="bli-explain">
+        <div class="phase-hdr">Interactive Mode</div>
+        <b>Hover</b> over a sub-expression in the formula — it will highlight. <b>Click</b> it to open an input where you can enter its Boolean equivalent. If correct, it will be substituted into the formula.
+      </div>
+
+      <div id="bli-formula-display" class="bool-expr-display" style="position:relative;"></div>
+      <div id="bli-popover" class="popover" style="display:none;"></div>
+
+      <div class="steps-area" id="bli-steps"></div>
+
+      <!-- Manual combine trigger — shown when auto-trigger may have been missed -->
+      <div id="bli-manual-combine-btn" style="display:none;margin-top:10px">
+        <button class="btn success" onclick="bliManualTriggerCombine()" style="font-size:0.72rem">
+          ✦ All done — proceed to Combine ▶
+        </button>
+      </div>
+
+      <!-- Phase 2: Combine all translated parts into one Boolean expression -->
+      <div id="bli-combine-area" style="display:none;margin-top:14px">
+        <div style="font-family:Orbitron,sans-serif;font-size:0.65rem;color:var(--cyan);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">
+          ✦ Step 2 — Combine
+        </div>
+        <div style="font-size:0.82rem;color:var(--dim);margin-bottom:8px" id="bli-combine-hint"></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="formula-input" id="bli-combine-input" type="text"
+            placeholder="write the full Boolean expression…"
+            style="flex:1;min-width:200px;font-size:0.9rem">
+          <button class="btn pri" onclick="bliSubmitCombine()">✓ Check</button>
+        </div>
+        <div id="bli-combine-feedback" style="margin-top:6px;font-size:0.78rem;min-height:18px"></div>
+      </div>
+
+      <!-- Phase 3: Simplification -->
+      <div id="bli-simplify-area" style="display:none;margin-top:14px">
+        <div style="font-family:Orbitron,sans-serif;font-size:0.65rem;color:var(--green);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">
+          ✦ Step 3 — Simplify (mod 2)
+        </div>
+        <div style="font-size:0.82rem;color:var(--dim);margin-bottom:6px" id="bli-simplify-hint"></div>
+        <div id="bli-simplify-unsimplified" style="font-size:0.9rem;margin-bottom:8px;padding:8px 12px;background:var(--s2);border-radius:6px;border:1px solid var(--bdr)"></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="formula-input" id="bli-simplify-input" type="text"
+            placeholder="simplified form…"
+            style="flex:1;min-width:200px;font-size:0.9rem">
+          <button class="btn pri" onclick="bliSubmitSimplify()">✓ Check</button>
+        </div>
+        <div id="bli-simplify-feedback" style="margin-top:6px;font-size:0.78rem;min-height:18px"></div>
+      </div>
+
+      <div class="simplified-banner" id="bli-simplified-result" style="display:none;margin-top:12px"></div>
+      <div class="status-line" id="bli-status"></div>
+
+      <div class="notation-key" style="border-left-color:rgba(0,255,163,0.4)">
+        <div class="nk-item">¬P → <span>1+x</span> (or 1-x)</div>
+        <div class="nk-item">P∧Q → <span>xy</span></div>
+        <div class="nk-item">P∨Q → <span>x+y+xy</span></div>
+        <div class="nk-item">P→Q → <span>1+x+xy</span></div>
+        <div class="nk-item">P↔Q → <span>1+x+y</span></div>
+        <div class="nk-item" style="width:100%;margin-top:2px;font-size:0.63rem">Click innermost brackets first · hover to highlight · all arithmetic mod 2 · juxtaposition = multiplication</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TOPIC 3: BOOLEAN → LOGIC ═══ -->
+  <div class="topic-panel" id="panel-lb">
+    <div class="sub-tabs">
+      <button class="sub-tab active" id="lbst-check" onclick="switchSub('lb','check')">✏️ Check Answer</button>
+    </div>
+
+    <!-- LB Check sub-panel -->
+    <div class="sub-panel active" id="lb-check">
+      <div class="card">
+        <div class="ctrl-row" style="align-items:flex-end;flex-wrap:wrap;">
+          <label class="field-lbl">Boolean Polynomial
+            <div class="formula-editor">
+              <input class="formula-input" id="lb-poly-input" type="text" value="1 + x + xy" style="min-width:220px" placeholder="e.g. 1 + x + xy">
+              <button class="btn" onclick="lbLoad()">Load</button>
+            </div>
+          </label>
+          <button class="btn" onclick="lbRand()" style="margin-bottom:0">🎲 Rand</button>
+        </div>
+        <div class="ctrl-row" style="align-items:flex-end;flex-wrap:wrap;">
+          <label class="field-lbl">Your Answer (logical formula)
+            <div class="formula-editor">
+              <input class="formula-input" id="lb-answer-input" type="text" style="min-width:280px" placeholder="e.g. P→Q">
+              <button class="btn pri" id="lb-check-btn" onclick="lbCheck()" disabled>✓ Check</button>
+              <button class="btn success" id="lb-solution-btn" onclick="lbShowSolution()" disabled>💡 Solution</button>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="explain-box" id="lb-explain">
+        <div class="phase-hdr">Ready</div>
+        Enter a Boolean polynomial (using variables x, y, z and +, *, or juxtaposition for multiplication). Then write a logical formula that you believe is equivalent, and press <b>Check</b>.
+      </div>
+
+      <div class="status-line" id="lb-status"></div>
+
+      <div id="lb-result-area" style="display:none"></div>
+
+      <div class="notation-key" style="border-left-color:rgba(0,212,255,0.4);margin-top:14px">
+        <div class="nk-item">Variables: <span>x, y, z, w</span> → logical <span>P, Q, R, S</span></div>
+        <div class="nk-item">Multiplication: <span>xy</span> or <span>x*y</span> or <span>x·y</span></div>
+        <div class="nk-item">Addition mod 2: <span>x + y</span> (= XOR)</div>
+        <div class="nk-item">Constants: <span>0</span>, <span>1</span></div>
+        <div class="nk-item" style="width:100%;margin-top:2px;font-size:0.63rem">All coefficients are mod 2 · enter your logical answer using P, Q, R, S and ¬, ∧, ∨, →, ↔</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="elementary-logic.obf.js"></script>
+</body>
+</html>
